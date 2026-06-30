@@ -184,7 +184,9 @@ def load_model(checkpoint_path: Optional[str] = None) -> ModelBundle:
 
     # ── 6. Load CLIP ──────────────────────────────────────────────────────
     logger.info(f"Memuat CLIP {clip_backbone}...")
+    logger.info("Before clip.load()")
     clip_model, preprocess = clip.load(clip_backbone, device=device)
+    logger.info("After clip.load()")
     clip_model.eval()
     for p in clip_model.parameters():
         p.requires_grad = False
