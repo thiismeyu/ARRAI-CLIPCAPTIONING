@@ -33,3 +33,5 @@ logs/
 
 # ─── Notebook checkpoints ─────────────────────────────────────────────────
 .ipynb_checkpoints/
+
+arrai-clipcap-model/
