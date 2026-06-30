@@ -24,12 +24,13 @@ from typing import Optional
 import torch
 import streamlit as st
 
+from huggingface_hub import hf_hub_download
+
 # Pastikan architecture/ bisa diimport
 ROOT_DIR = Path(__file__).parent.parent.resolve()
 sys.path.insert(0, str(ROOT_DIR))
 
 from config import (
-    CHECKPOINT_PATH,
     CLIP_BACKBONE,
     CLIP_DIM,
     GPT2_DIM,
@@ -78,18 +79,37 @@ def load_model(checkpoint_path: Optional[str] = None) -> ModelBundle:
     import clip
     from transformers import GPT2LMHeadModel, GPT2Tokenizer
 
-    ckpt_path = Path(checkpoint_path) if checkpoint_path else CHECKPOINT_PATH
+    if checkpoint_path:
+        ckpt_path = Path(checkpoint_path)
+    else:
+        logger.info("Downloading/loading checkpoint from Hugging Face...")
+
+        MODEL_DIR = ROOT_DIR / "models"
+        MODEL_DIR.mkdir(parents=True, exist_ok=True)
+
+        try:
+            ckpt_path = Path(
+                hf_hub_download(
+                    repo_id="ayuuuuuuu/arrai-clipcap-model",
+                    filename="clipcap_finetuned_local.pth",
+                    local_dir=MODEL_DIR,
+                )
+            )
+        except Exception as e:
+            logger.exception("Gagal mengunduh checkpoint dari Hugging Face.")
+            raise RuntimeError(
+                "Tidak dapat mengunduh model dari Hugging Face. "
+                "Periksa nama repository, nama file, dan koneksi internet."
+            ) from e
+
+    logger.info(f"Checkpoint loaded: {ckpt_path}")
+                
 
     # ── 1. Validasi file checkpoint ──────────────────────────────────────
-    logger.info(f"Mencari checkpoint di: {ckpt_path}")
+    logger.info(f"Checkpoint: {ckpt_path}")
+
     if not ckpt_path.exists():
-        msg = (
-            f"Checkpoint tidak ditemukan: {ckpt_path}\n"
-            f"Pastikan file 'clipcap_finetuned_local.pth' ada di folder 'models/'.\n"
-            f"File ini tidak disertakan di repository karena ukurannya ~600MB."
-        )
-        logger.error(msg)
-        raise FileNotFoundError(msg)
+        raise FileNotFoundError(f"Checkpoint gagal diunduh: {ckpt_path}")
 
     # ── 2. Device ─────────────────────────────────────────────────────────
     device = "cuda" if torch.cuda.is_available() else "cpu"

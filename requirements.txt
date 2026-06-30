@@ -14,3 +14,5 @@ numpy>=1.24.0
 ftfy>=6.2.0
 regex
 tqdm
+
+huggingface_hub>=0.23.0
